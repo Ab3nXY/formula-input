@@ -2,25 +2,25 @@
 
 import { create } from "zustand";
 
-type Tag = {
-  id: string;
-  label: string;
-};
+type FormulaItem = {
+    label: string;
+    value: number;
+  };
 
 type FormulaState = {
-  formula: (string | Tag)[];
+  formula: (string | FormulaItem)[];
   suggestions: string[];
-  editingTag: string | null;
-  setFormula: (formula: (string | Tag)[]) => void;
+  editingFormulaItem: string | null;
+  setFormula: (formula: (string | FormulaItem)[]) => void;
   setSuggestions: (suggestions: string[]) => void;
-  setEditingTag: (tagId: string | null) => void;
+  setEditingFormulaItem: (FormulaItemId: string | null) => void;
 };
 
 export const useFormulaStore = create<FormulaState>((set) => ({
   formula: [],
   suggestions: [],
-  editingTag: null,
+  editingFormulaItem: null,
   setFormula: (formula) => set({ formula }),
   setSuggestions: (suggestions) => set({ suggestions }),
-  setEditingTag: (tagId) => set({ editingTag: tagId }),
+  setEditingFormulaItem: (FormulaItemId) => set({ editingFormulaItem: FormulaItemId }),
 }));
