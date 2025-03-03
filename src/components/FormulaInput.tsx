@@ -10,8 +10,8 @@ interface FormulaItem {
 
 const FormulaInput: React.FC = () => {
   const { formula, setFormula } = useFormulaStore();
-  const [inputValue, setInputValue] = useState("");
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [inputValue, setInputValue] = useState<string>("");
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -21,7 +21,7 @@ const FormulaInput: React.FC = () => {
     setShowSuggestions(inputValue.length > 0);
   }, [inputValue]);
 
-  const handleSuggestionClick = (suggestion: any) => {
+  const handleSuggestionClick = (suggestion: FormulaItem) => {
     setFormula([...formula, { label: suggestion.name, value: suggestion.value }]);
     setInputValue("");
   };
@@ -44,7 +44,7 @@ const FormulaInput: React.FC = () => {
   const calculateResult = () => {
     try {
       const expression = formula
-        .map(item => typeof item === "string" ? item : item.value)
+        .map(item => (typeof item === "string" ? item : item.value))
         .join("");
       return eval(expression);
     } catch (e) {
@@ -58,7 +58,7 @@ const FormulaInput: React.FC = () => {
         <div className="relative flex-1" ref={containerRef}>
           <div className="flex items-center flex-wrap gap-2 bg-white rounded p-2 shadow border">
             <span className="text-gray-500">=</span>
-            {formula.map((item, index) => (
+            {formula.map((item, index) =>
               typeof item === "string" ? (
                 <span key={index} className="font-mono text-blue-600">
                   {item}
@@ -72,7 +72,7 @@ const FormulaInput: React.FC = () => {
                   {item.label}
                 </span>
               )
-            ))}
+            )}
             <input
               ref={inputRef}
               type="text"
@@ -84,10 +84,9 @@ const FormulaInput: React.FC = () => {
               autoComplete="off"
             />
           </div>
-
           {showSuggestions && suggestions.length > 0 && (
             <ul className="absolute left-0 right-0 mt-1 bg-white border rounded shadow-lg z-10">
-              {suggestions.map((suggestion: any) => (
+              {suggestions.map((suggestion) => (
                 <li
                   key={suggestion.id}
                   className="px-4 py-2 hover:bg-blue-50 cursor-pointer font-mono text-sm"
@@ -99,12 +98,10 @@ const FormulaInput: React.FC = () => {
             </ul>
           )}
         </div>
-
         <div className="bg-white p-2 rounded shadow font-mono">
           {formula.length > 0 ? calculateResult() : "0"}
         </div>
       </div>
-
       <div className="text-gray-500 text-sm">
         Allowed operators: +, -, *, /, (, ), ^, numbers
       </div>
