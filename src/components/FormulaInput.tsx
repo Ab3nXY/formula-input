@@ -47,11 +47,11 @@ const FormulaInput: React.FC = () => {
         .map(item => (typeof item === "string" ? item : item.value))
         .join("");
       return eval(expression);
-    } catch (e) {
+    } catch {
       return "Error";
     }
   };
-
+  
   return (
     <div className="max-w-lg mx-auto p-4 bg-gray-100 rounded-lg">
       <div className="flex items-center gap-4 mb-4">
@@ -107,6 +107,5 @@ const FormulaInput: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default FormulaInput;
+  
+  export default FormulaInput;
