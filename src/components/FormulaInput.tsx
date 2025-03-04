@@ -24,6 +24,12 @@ const FormulaInput: React.FC = () => {
     setShowSuggestions(activeInput.length > 0);
   }, [activeInput]);
 
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [editingIndex]);
+
   const handleSuggestionClick = (suggestion: FormulaItem) => {
     if (editingIndex !== null) {
       const newFormula = [...formula];
@@ -35,16 +41,32 @@ const FormulaInput: React.FC = () => {
       setFormula([...formula, { name: suggestion.name, value: suggestion.value }]);
     }
     setInputValue("");
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (["+", "-", "*", "/", "(", ")", "^"].includes(e.key)) {
       if (inputValue.trim() && !isNaN(Number(inputValue))) {
+        setFormula([...formula, { name: inputValue, value: Number(inputValue) }, e.key]);
+        setInputValue("");
+      } else {
+        setFormula([...formula, e.key]);
+      }
+      e.preventDefault();
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    } else if (e.key === "Enter") {
+      if (inputValue.trim() && !isNaN(Number(inputValue))) {
         setFormula([...formula, { name: inputValue, value: Number(inputValue) }]);
         setInputValue("");
       }
-      setFormula([...formula, e.key]);
       e.preventDefault();
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
     } else if (e.key === "Backspace" && inputValue === "") {
       setFormula(formula.slice(0, -1));
     }
@@ -95,10 +117,16 @@ const FormulaInput: React.FC = () => {
                         newFormula[index] = newToken;
                         setFormula(newFormula);
                         setEditingIndex(null);
+                        if (inputRef.current) {
+                          inputRef.current.focus();
+                        }
                       } else if (e.key === "Backspace" && editingValue === "") {
                         const newFormula = formula.filter((_, i) => i !== index);
                         setFormula(newFormula);
                         setEditingIndex(null);
+                        if (inputRef.current) {
+                          inputRef.current.focus();
+                        }
                       }
                     }}
                     className="font-mono bg-blue-100 px-2 rounded outline-none"
@@ -114,6 +142,9 @@ const FormulaInput: React.FC = () => {
                             newFormula[index] = { name: sug.name, value: sug.value };
                             setFormula(newFormula);
                             setEditingIndex(null);
+                            if (inputRef.current) {
+                              inputRef.current.focus();
+                            }
                           }}
                         >
                           {sug.name} ({sug.value})
