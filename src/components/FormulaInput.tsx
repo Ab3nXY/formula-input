@@ -17,43 +17,60 @@ const FormulaInput: React.FC = () => {
   const [editingValue, setEditingValue] = useState("");
   const activeInput = editingIndex !== null ? editingValue : inputValue;
 
-
-  const { data: suggestions = [] } = useAutocomplete(activeInput);
+  const { data: allSuggestions = [] } = useAutocomplete("");
+  const { data: filteredSuggestions = [] } = useAutocomplete(activeInput);
 
   useEffect(() => {
     setShowSuggestions(activeInput.length > 0);
   }, [activeInput]);
-  
 
   const handleSuggestionClick = (suggestion: FormulaItem) => {
-    setFormula([...formula, { name: suggestion.name, value: suggestion.value }]);
+    if (editingIndex !== null) {
+      const newFormula = [...formula];
+      newFormula[editingIndex] = { name: suggestion.name, value: suggestion.value };
+      setFormula(newFormula);
+      setEditingIndex(null);
+      setEditingValue("");
+    } else {
+      setFormula([...formula, { name: suggestion.name, value: suggestion.value }]);
+    }
     setInputValue("");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (["+", "-", "*", "/", "(", ")", "^"].includes(e.key)) {
       if (inputValue.trim() && !isNaN(Number(inputValue))) {
         setFormula([...formula, { name: inputValue, value: Number(inputValue) }]);
         setInputValue("");
       }
-      e.preventDefault();
-    } else if (["+", "-", "*", "/", "(", ")", "^"].includes(e.key)) {
       setFormula([...formula, e.key]);
-      setInputValue("");
       e.preventDefault();
     } else if (e.key === "Backspace" && inputValue === "") {
       setFormula(formula.slice(0, -1));
     }
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInputValue(value);
+  }
+
   const calculateResult = () => {
     try {
       const expression = formula
-        .map(item => (typeof item === "string" ? item : item.value))
+        .map((item) => (typeof item === "string" ? item : item.value))
         .join("");
       return eval(expression);
     } catch {
       return "Error";
+    }
+  };
+
+  const handleItemClick = (index: number, item: string | FormulaItem) => {
+    if (typeof item !== "string") {
+      setEditingIndex(index);
+      setEditingValue(item.name);
+      setShowSuggestions(true);
     }
   };
 
@@ -63,90 +80,83 @@ const FormulaInput: React.FC = () => {
         <div className="relative flex-1" ref={containerRef}>
           <div className="flex items-center flex-wrap gap-2 bg-white rounded p-2 shadow border">
             <span className="text-gray-500">=</span>
-              {formula.map((item, index) =>
-                editingIndex === index ? (
-                  <div key={index} className="relative inline-block">
-                    <input
-                      value={editingValue}
-                      onChange={(e) => setEditingValue(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          const newToken = isNaN(Number(editingValue))
-                            ? editingValue
-                            : { name: editingValue, value: Number(editingValue) };
-                          const newFormula = [...formula];
-                          newFormula[index] = newToken;
-                          setFormula(newFormula);
-                          setEditingIndex(null);
-                        } else if (e.key === "Backspace" && editingValue === "") {
-                          const newFormula = formula.filter((_, i) => i !== index);
-                          setFormula(newFormula);
-                          setEditingIndex(null);
-                        }
-                      }}
-                      className="font-mono bg-blue-100 px-2 rounded outline-none"
-                    />
-                    {showSuggestions && suggestions.length > 0 && (
-                      <ul className="absolute left-0 right-0 mt-1 bg-white border rounded shadow-lg z-10">
-                        {suggestions.map((sug) => (
-                          <li
+            {formula.map((item, index) =>
+              editingIndex === index ? (
+                <div key={index} className="relative inline-block">
+                  <input
+                    value={editingValue}
+                    onChange={(e) => setEditingValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        const newToken = isNaN(Number(editingValue))
+                          ? editingValue
+                          : { name: editingValue, value: Number(editingValue) };
+                        const newFormula = [...formula];
+                        newFormula[index] = newToken;
+                        setFormula(newFormula);
+                        setEditingIndex(null);
+                      } else if (e.key === "Backspace" && editingValue === "") {
+                        const newFormula = formula.filter((_, i) => i !== index);
+                        setFormula(newFormula);
+                        setEditingIndex(null);
+                      }
+                    }}
+                    className="font-mono bg-blue-100 px-2 rounded outline-none"
+                  />
+                  {showSuggestions && (
+                    <ul className="absolute left-0 right-0 mt-1 bg-white border rounded shadow-lg z-10">
+                      {allSuggestions.map((sug) => (
+                        <li
                           key={sug.name + sug.value}
-                            className="px-4 py-2 hover:bg-blue-50 cursor-pointer font-mono text-sm"
-                            onClick={() => {
-                              const newFormula = [...formula];
-                              newFormula[index] = { name: sug.name, value: sug.value };
-                              setFormula(newFormula);
-                              setEditingIndex(null);
-                            }}
-                          >
-                            {sug.name} ({sug.value})
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ) : typeof item === "string" ? (
-                  <span
-                    key={index}
-                    className="font-mono text-blue-600"
-                    onDoubleClick={() => {
-                      setEditingIndex(index);
-                      setEditingValue(item);
-                    }}
-                  >
-                    {item}
-                  </span>
-                ) : (
-                  <span
-                    key={index}
-                    className="font-mono bg-blue-100 px-2 rounded cursor-pointer"
-                    onDoubleClick={() => {
-                      setEditingIndex(index);
-                      setEditingValue(item.name);
-                    }}
-                    onClick={() => setFormula(formula.filter((_, i) => i !== index))}
-                  >
-                    {item.name}
-                  </span>
-                )
-              )}
+                          className="px-4 py-2 hover:bg-blue-50 cursor-pointer font-mono text-sm"
+                          onClick={() => {
+                            const newFormula = [...formula];
+                            newFormula[index] = { name: sug.name, value: sug.value };
+                            setFormula(newFormula);
+                            setEditingIndex(null);
+                          }}
+                        >
+                          {sug.name} ({sug.value})
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ) : typeof item === "string" ? (
+                <span
+                  key={index}
+                  className="font-mono text-blue-600 cursor-pointer"
+                  onClick={() => handleItemClick(index, item)}
+                >
+                  {item}
+                </span>
+              ) : (
+                <span
+                  key={index}
+                  className="font-mono bg-blue-100 px-2 rounded cursor-pointer"
+                  onClick={() => handleItemClick(index, item)}
+                >
+                  {item.name}
+                </span>
+              )
+            )}
 
             <input
               ref={inputRef}
               type="text"
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
+              onChange={handleChange}
               onKeyDown={handleKeyDown}
               className="flex-1 min-w-[100px] outline-none font-mono"
               placeholder="Type here..."
               autoComplete="off"
             />
           </div>
-          {showSuggestions && suggestions.length > 0 && (
+          {showSuggestions && (
             <ul className="absolute left-0 right-0 mt-1 bg-white border rounded shadow-lg z-10">
-              {suggestions.map((suggestion) => (
+              {filteredSuggestions.map((suggestion) => (
                 <li
-                key={suggestion.name + suggestion.value}
+                  key={suggestion.name + suggestion.value}
                   className="px-4 py-2 hover:bg-blue-50 cursor-pointer font-mono text-sm"
                   onClick={() => handleSuggestionClick(suggestion)}
                 >
